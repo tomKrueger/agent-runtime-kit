@@ -3,7 +3,7 @@
 Cloud Agents must use the committed `.cursor/environment.json`. Install the shared kit:
 
 ```bash
-pnpm add github:tomKrueger/agent-runtime-kit#v0.0.1
+pnpm add github:tomKrueger/agent-runtime-kit#v0.0.2
 pnpm exec agent-runtime init
 ```
 

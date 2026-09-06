@@ -7,9 +7,9 @@ Shared **workspace runtime** for Cursor Cloud Agents, OpenAI Codex, Claude Code,
 ## Install (GitHub only — no npm registry / no extra server)
 
 ```bash
-pnpm add github:tomKrueger/agent-runtime-kit#v0.0.1
+pnpm add github:tomKrueger/agent-runtime-kit#v0.0.2
 # or
-npm install github:tomKrueger/agent-runtime-kit#v0.0.1
+npm install github:tomKrueger/agent-runtime-kit#v0.0.2
 ```
 
 Hosted at [tomKrueger/agent-runtime-kit](https://github.com/tomKrueger/agent-runtime-kit) (transfer to `GritGoatTech` later if desired). Private repo: Cloud Agents / CI need a GitHub token with `contents:read` (e.g. Cursor Secret) so the package can be fetched.
@@ -27,6 +27,7 @@ pnpm exec agent-runtime init --force  # overwrite scaffolds
 
 After `init`, edit `.cursor/agent-runtime.config.json`:
 
+- `environmentName` — becomes `.cursor/environment.json` `"name"` (Cloud Agent **display label**, not the npm package name). `init` derives a default from `package.json` (e.g. `hresalehub_web_nextjs` → `hresalehub-dev`); override when you want a friendlier label like `HresaleHub`.
 - `packageManager` / `installCmd` / `devCmd` / `migrateCmd`
 - `supabase.apiPort` / `dbPort` / `studioPort` (e.g. Hresale `603xx`, GritGoat `543xx`)
 - `envDefaults` / `envKeys` for `.env.local` generation (phase 1+)

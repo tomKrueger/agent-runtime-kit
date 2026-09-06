@@ -1,6 +1,6 @@
 {
   "name": "@gritgoattech/agent-runtime-kit",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Shared workspace runtime for Cursor / Codex / Claude cloud agents and self-hosted runners (local vs hosted Supabase).",
   "type": "module",
   "license": "UNLICENSED",

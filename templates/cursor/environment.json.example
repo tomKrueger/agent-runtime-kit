@@ -1,6 +1,6 @@
 {
   "$schema": "https://www.cursor.com/schemas/environment.schema.json",
-  "name": "app-dev",
+  "name": "REPLACE_WITH_ENVIRONMENT_NAME",
   "user": "ubuntu",
   "build": {
     "dockerfile": "Dockerfile",

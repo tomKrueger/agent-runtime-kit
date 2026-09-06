@@ -1,4 +1,5 @@
 {
+  "environmentName": "myapp-dev",
   "packageManager": "pnpm",
   "installCmd": "pnpm install --frozen-lockfile",
   "devCmd": "pnpm dev",

@@ -1,6 +1,6 @@
 # Agent runtime (consumer fragment)
 
-Shared kit: `@gritgoattech/agent-runtime-kit` — see the kit repo docs:
+Shared kit: `@tomkrueger/agent-runtime-kit` (Tom Krueger Agent Runtime Kit) — see the kit repo docs:
 
 - https://github.com/tomKrueger/agent-runtime-kit/blob/main/docs/REQUIREMENTS.md
 - https://github.com/tomKrueger/agent-runtime-kit/blob/main/docs/CONSUMER_MIGRATION.md

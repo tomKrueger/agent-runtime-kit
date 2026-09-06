@@ -1,9 +1,10 @@
 {
-  "name": "@gritgoattech/agent-runtime-kit",
+  "name": "@tomkrueger/agent-runtime-kit",
   "version": "0.1.1",
-  "description": "Shared workspace runtime for Cursor / Codex / Claude cloud agents and self-hosted runners (local vs hosted Supabase).",
+  "description": "Tom Krueger Agent Runtime Kit — shared workspace runtime for Cursor / Codex / Claude cloud agents and self-hosted runners (local vs hosted Supabase).",
   "type": "module",
   "license": "UNLICENSED",
+  "author": "Tom Krueger",
   "private": false,
   "bin": {
     "agent-runtime": "./bin/agent-runtime.js"

@@ -1,6 +1,6 @@
-# @gritgoattech/agent-runtime-kit
+# Tom Krueger Agent Runtime Kit
 
-Shared workspace runtime for Cursor / Claude / Codex / self-hosted runners: local vs hosted Supabase, `.env.local` generation, migrate, Build-time image warm.
+`@tomkrueger/agent-runtime-kit` — shared workspace runtime for Cursor / Claude / Codex / self-hosted runners: local vs hosted Supabase, `.env.local` generation, migrate, Build-time image warm.
 
 ## Documentation (start here)
 
@@ -54,4 +54,4 @@ process env (Secrets) → merged `envDefaults` → port-derived local defaults.
 
 ## License
 
-UNLICENSED — `@gritgoattech/agent-runtime-kit`.
+UNLICENSED — `@tomkrueger/agent-runtime-kit`.

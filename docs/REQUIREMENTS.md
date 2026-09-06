@@ -1,8 +1,9 @@
 # Agent Runtime Kit — Requirements & Intent
 
 **Audience:** Engineers and coding agents continuing work on this repository  
-**Package:** `@gritgoattech/agent-runtime-kit`  
-**Repo:** https://github.com/tomKrueger/agent-runtime-kit (may transfer to `GritGoatTech` later)  
+**Package:** `@tomkrueger/agent-runtime-kit`  
+**Repo:** https://github.com/tomKrueger/agent-runtime-kit  
+
 **Current release:** `v0.1.1`  
 **Status:** Cursor path is usable; Claude/Codex/self-hosted adapters are partial
 

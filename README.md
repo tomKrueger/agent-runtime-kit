@@ -1,6 +1,23 @@
 # @gritgoattech/agent-runtime-kit
 
-Shared workspace runtime for Cursor / Claude / Codex / self-hosted runners.
+Shared workspace runtime for Cursor / Claude / Codex / self-hosted runners: local vs hosted Supabase, `.env.local` generation, migrate, Build-time image warm.
+
+## Documentation (start here)
+
+| Doc | Purpose |
+| --- | --- |
+| **[docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)** | Full requirements, desires, roadmap, acceptance criteria — **handoff for other agents** |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Component map and Cursor data flow |
+| [docs/CONSUMER_MIGRATION.md](docs/CONSUMER_MIGRATION.md) | How apps migrate off bash scripts |
+| [AGENTS.md](AGENTS.md) | Rules for agents working *in this repo* |
+
+## Quick start (consumers)
+
+```bash
+pnpm add github:tomKrueger/agent-runtime-kit#v0.1.1
+# write agent-runtime.config.json at repo root (ports, migrateCmd, envKeys)
+pnpm exec agent-runtime sync
+```
 
 ## Config layout (repo root)
 
@@ -8,51 +25,28 @@ Shared workspace runtime for Cursor / Claude / Codex / self-hosted runners.
 agent-runtime.config.json                 # required — shared defaults
 agent-runtime.config.cursor.json          # optional — Cursor overrides
 agent-runtime.config.claude.json          # optional — Claude overrides
-.cursor/environment.json                  # GENERATED for Cursor — do not hand-edit ports/name/install
+.cursor/environment.json                  # GENERATED for Cursor — refresh via sync
 ```
 
-Merge order: **base → vendor overlay**. Arrays/scalars in the overlay replace; nested objects deep-merge.
-
-Cursor cannot read our config file (its schema is closed). So `environment.json` stays a thin adapter. After you change ports / `environmentName` / install commands in config:
+Merge order: **base → vendor overlay**. After editing config:
 
 ```bash
 pnpm exec agent-runtime sync
-# or: pnpm exec agent-runtime init --refresh
 ```
-
-That regenerates `.cursor/environment.json` from the merged Cursor config. It **never** deletes or rewrites `agent-runtime.config.json`.
 
 ## Init safety
 
 | Flag | Effect |
 | --- | --- |
-| `init` | Create base config **only if missing**; create `environment.json` if missing |
-| `init --refresh` / `init --force` | Refresh adapters from config — **config kept** |
-| `init --force-config` | Overwrite base config from template (backup `.bak`) — rare |
+| `init` | Create base config **only if missing** |
+| `init --refresh` / `init --force` | Refresh adapters — **config kept** |
+| `init --force-config` | Replace base config from template (writes `.bak`) |
 
 ## Commands
 
-```bash
-pnpm add github:tomKrueger/agent-runtime-kit#v0.1.1
-pnpm exec agent-runtime init
-pnpm exec agent-runtime sync --vendor=cursor
-pnpm exec agent-runtime sync --vendor=claude   # writes .agent-runtime/CLAUDE.bootstrap.md
-```
-
-Cursor Cloud:
-
-```json
-"install": "pnpm install --frozen-lockfile && pnpm exec agent-runtime cursor-install",
-"start": "pnpm exec agent-runtime cursor-start"
-```
-
-(Those strings are written by `sync` from `installCmd` / packageManager.)
-
-Claude / generic:
-
-```bash
-pnpm exec agent-runtime prepare --vendor=claude
-```
+- `cursor-install` — Cloud Build: ensure Docker/CLI + warm Supabase images  
+- `cursor-start` / `prepare` — boot: `.env.local`, local/hosted Supabase, migrate  
+- `sync` — regenerate vendor adapters from config  
 
 ## Env resolution
 

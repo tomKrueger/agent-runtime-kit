@@ -48,7 +48,7 @@ Copy-paste drift is unacceptable. The kit must be one npm-installable package (h
 
 Non-goals (for now):
 
-- Replacing app Dockerfiles entirely (may publish GHCR base image later)
+- Publishing a GHCR prebuilt image (shared Dockerfile in-kit first; registry image later)
 - Putting secrets in the package or in committed config beyond local demo defaults
 - Perfect DinD on every managed vendor on day one (Codex/Claude managed may stay hosted-first)
 
@@ -105,7 +105,7 @@ Vendor selection:
 | `overlay <vendor>` | Create `agent-runtime.config.<vendor>.json` from template **only if missing** (`--force` replaces with `.bak`) |
 | `init --refresh` / `init --force` | Regenerate adapters from config — **never overwrite base config** |
 | `init --force-config` | Replace base config from template (write `.bak`) — rare, explicit |
-| `sync` | Regenerate adapters only — **never touch base/overlay config content** |
+| `sync` | Regenerate adapters only — **never touch base/overlay config content**. Writes `.cursor/environment.json` and the shared `.cursor/Dockerfile` from the kit template |
 
 Rationale: config holds product-specific ports, secrets defaults, migrate commands. Wiping it on “force” destroyed Hresale’s `603xx` settings in early trials. Vendor overlays stay opt-in so `init` does not litter example Cursor/Claude files into every consumer.
 
@@ -219,7 +219,7 @@ Document when it is safe to delete `.cursor/scripts/cursor-agent/*.sh`:
 | 1b | Done (`v0.1.1`) | Root config, vendor overlays, safe `sync`, `init` does not wipe config |
 | 2 | Next | Harden Hresale migration docs; optional remove-bash checklist automation; ensure `sync` is idempotent and well-tested |
 | 3 | Next | GritGoat consumer config + Cursor wiring |
-| 4 | Later | GHCR worker base image (`FROM` for Cursor Dockerfile + self-hosted) |
+| 4 | Next | Shared Cursor Dockerfile via `sync` (done in-kit); later GHCR worker base image (`FROM` for self-hosted) |
 | 5 | Later | Claude self-hosted hook/wrapper first-class (`claude-bootstrap`); expand beyond `.agent-runtime/CLAUDE.bootstrap.md` |
 | 6 | Later | Codex `codex-setup` (hosted-first Supabase) |
 | 7 | Later | Generic `selfhosted-prepare` entrypoint for our runner fleet |

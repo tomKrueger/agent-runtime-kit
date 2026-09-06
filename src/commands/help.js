@@ -9,7 +9,7 @@ Commands:
   version              Print package version
   init                 Create root agent-runtime.config.json if missing; refresh adapters
   overlay              Add a vendor override file (cursor|claude) — not created by init
-  sync                 Regenerate .cursor/environment.json (etc.) FROM config — never wipes config
+  sync                 Regenerate .cursor/environment.json + Dockerfile FROM config — never wipes config
   cursor-install       Cursor Cloud Build entry
   cursor-start         Cursor Cloud boot
   prepare              Same bootstrap; pass --vendor=claude|cursor|default

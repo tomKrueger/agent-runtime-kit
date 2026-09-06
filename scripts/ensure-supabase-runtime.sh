@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Idempotent: install Docker Engine + Supabase CLI when missing.
-# Prefer baking these into the consumer .cursor/Dockerfile so this is a no-op.
+# Prefer baking these into the kit-managed `.cursor/Dockerfile` (via `agent-runtime sync`)
+# so this script is a no-op on Cloud Builds.
 set -euo pipefail
 
 SUPABASE_CLI_VERSION="${SUPABASE_CLI_VERSION:-2.114.0}"

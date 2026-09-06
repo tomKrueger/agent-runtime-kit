@@ -12,6 +12,11 @@ export const LOCAL_ANON_KEY =
 export const LOCAL_SERVICE_ROLE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
 
+/** Defaults stamped into the shared Cursor Dockerfile by `sync`. */
+export const DEFAULT_NODE_VERSION = "22.22.2";
+export const DEFAULT_PNPM_VERSION = "10.33.2";
+export const DEFAULT_SUPABASE_CLI_VERSION = "2.114.0";
+
 /**
  * @typedef {'cursor' | 'claude' | 'codex' | 'default'} AgentRuntimeVendor
  */
@@ -30,6 +35,9 @@ export const LOCAL_SERVICE_ROLE_KEY =
  * @property {string} [installCmd]
  * @property {string} [devCmd]
  * @property {string} [migrateCmd]
+ * @property {string} [nodeVersion]
+ * @property {string} [pnpmVersion]
+ * @property {string} [supabaseCliVersion]
  * @property {SupabasePorts} supabase
  * @property {Record<string, string>} [envDefaults]
  * @property {string[]} [envKeys]
@@ -194,6 +202,13 @@ export function normalizeConfig(raw, pathForErrors = BASE_CONFIG_FILENAME) {
     installCmd: typeof obj.installCmd === "string" ? obj.installCmd : undefined,
     devCmd: typeof obj.devCmd === "string" ? obj.devCmd : undefined,
     migrateCmd: typeof obj.migrateCmd === "string" ? obj.migrateCmd : undefined,
+    nodeVersion: optionalToolVersion(obj.nodeVersion, "nodeVersion", pathForErrors),
+    pnpmVersion: optionalToolVersion(obj.pnpmVersion, "pnpmVersion", pathForErrors),
+    supabaseCliVersion: optionalToolVersion(
+      obj.supabaseCliVersion,
+      "supabaseCliVersion",
+      pathForErrors,
+    ),
     supabase: {
       apiPort,
       dbPort,
@@ -210,6 +225,33 @@ export function normalizeConfig(raw, pathForErrors = BASE_CONFIG_FILENAME) {
         ? /** @type {AgentRuntimeConfig['cursorStart']} */ (obj.cursorStart)
         : {},
   };
+}
+
+/**
+ * @param {unknown} value
+ * @param {string} field
+ * @param {string} pathForErrors
+ * @returns {string | undefined}
+ */
+function optionalToolVersion(value, field, pathForErrors) {
+  if (value === undefined || value === null || value === "") return undefined;
+  return parseToolVersion(value, field, pathForErrors);
+}
+
+/**
+ * Allow semver-ish tool pins only (safe to embed in Dockerfile ARG lines).
+ * @param {unknown} value
+ * @param {string} field
+ * @param {string} pathForErrors
+ */
+function parseToolVersion(value, field, pathForErrors) {
+  const s = String(value).trim();
+  if (!/^[0-9]+(\.[0-9]+){0,3}([-+][A-Za-z0-9._-]+)?$/.test(s)) {
+    throw new Error(
+      `${pathForErrors}: ${field} must look like a version (e.g. "22.22.2" or "24"), got ${JSON.stringify(value)}`,
+    );
+  }
+  return s;
 }
 
 /**

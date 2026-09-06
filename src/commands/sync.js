@@ -6,10 +6,12 @@ import {
   LEGACY_CONFIG_RELATIVE_PATH,
   loadProjectConfig,
 } from "../core/config.js";
+import { resolveImageToolVersions } from "../core/package-tools.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = join(__dirname, "..", "..");
 const TEMPLATES = join(PACKAGE_ROOT, "templates");
+const CURSOR_DOCKERFILE_TEMPLATE = join(TEMPLATES, "cursor", "Dockerfile");
 
 /**
  * Regenerate vendor adapter files from merged config.
@@ -89,6 +91,8 @@ export function syncCursorEnvironment(projectRoot) {
   const studioPort = config.supabase.studioPort ?? apiPort + 2;
 
   mkdirSync(join(projectRoot, ".cursor"), { recursive: true });
+  syncCursorDockerfile(projectRoot, config);
+
   const envJsonPath = join(projectRoot, ".cursor", "environment.json");
 
   // Preserve build/user/snapshot fields if already present.
@@ -119,9 +123,8 @@ export function syncCursorEnvironment(projectRoot) {
   };
 
   if (!next.user) next.user = "ubuntu";
-  if (!next.build) {
-    next.build = { dockerfile: "Dockerfile", context: ".." };
-  }
+  // Always point at the kit-managed Dockerfile under .cursor/
+  next.build = { dockerfile: "Dockerfile", context: ".." };
   if (!Array.isArray(next.terminals) || next.terminals.length === 0) {
     next.terminals = [{ name: "dev", command: devCmd, description: "App dev server" }];
   } else if (next.terminals[0] && typeof next.terminals[0] === "object") {
@@ -138,6 +141,54 @@ export function syncCursorEnvironment(projectRoot) {
   console.log(
     `[agent-runtime sync] wrote .cursor/environment.json from config (name=${name}, ports=${apiPort}/${dbPort}/${studioPort})`,
   );
+}
+
+/**
+ * Render the shared Cursor Cloud Agent Dockerfile into the consumer repo.
+ * Cursor builds from `.cursor/Dockerfile` (see environment.json build.dockerfile).
+ *
+ * Tool versions: explicit config → package.json (engines.node / packageManager) → kit defaults.
+ *
+ * @param {string} projectRoot
+ * @param {import("../core/config.js").AgentRuntimeConfig} [config]
+ */
+export function syncCursorDockerfile(projectRoot, config) {
+  if (!existsSync(CURSOR_DOCKERFILE_TEMPLATE)) {
+    console.warn(
+      `[agent-runtime sync] WARN: missing kit Dockerfile template at ${CURSOR_DOCKERFILE_TEMPLATE}`,
+    );
+    return;
+  }
+  const cfg = config || loadProjectConfig(projectRoot, { vendor: "cursor" });
+  const { nodeVersion, pnpmVersion, supabaseCliVersion, sources } = resolveImageToolVersions(
+    projectRoot,
+    cfg,
+  );
+
+  let body = readFileSync(CURSOR_DOCKERFILE_TEMPLATE, "utf8");
+  body = stampDockerfileArg(body, "NODE_VERSION", nodeVersion);
+  body = stampDockerfileArg(body, "PNPM_VERSION", pnpmVersion);
+  body = stampDockerfileArg(body, "SUPABASE_CLI_VERSION", supabaseCliVersion);
+
+  const dest = join(projectRoot, ".cursor", "Dockerfile");
+  mkdirSync(dirname(dest), { recursive: true });
+  writeFileSync(dest, body, "utf8");
+  console.log(
+    `[agent-runtime sync] wrote .cursor/Dockerfile (node=${nodeVersion}, pnpm=${pnpmVersion}, supabase-cli=${supabaseCliVersion}; via ${sources.join(", ")})`,
+  );
+}
+
+/**
+ * @param {string} dockerfile
+ * @param {string} name
+ * @param {string} value
+ */
+export function stampDockerfileArg(dockerfile, name, value) {
+  const re = new RegExp(`^ARG ${name}=.*$`, "m");
+  if (!re.test(dockerfile)) {
+    throw new Error(`Dockerfile template missing ARG ${name}=… line`);
+  }
+  return dockerfile.replace(re, `ARG ${name}=${value}`);
 }
 
 /**

@@ -13,13 +13,13 @@ How an app (e.g. HresaleHub, GritGoat) switches from vendored `.cursor/scripts/c
 2. **Create root config** `agent-runtime.config.json` with that app’s real ports, `migrateCmd`, `envKeys`, `envDefaults`.  
    Optional: `agent-runtime.config.cursor.json` for Cursor-only toggles.
 
-3. **Generate Cursor adapter**:
+3. **Generate Cursor adapters**:
 
    ```bash
    pnpm exec agent-runtime sync
    ```
 
-   Commit both the config files and the updated `.cursor/environment.json`.
+   Commit the config files plus generated `.cursor/environment.json` and `.cursor/Dockerfile`.
 
 4. **Rebuild** the Cursor Cloud environment bound to `.cursor/environment.json` (Build).
 
@@ -32,7 +32,7 @@ How an app (e.g. HresaleHub, GritGoat) switches from vendored `.cursor/scripts/c
 ```bash
 # edit agent-runtime.config.json
 pnpm exec agent-runtime sync
-git add agent-runtime.config.json .cursor/environment.json
+git add agent-runtime.config.json .cursor/environment.json .cursor/Dockerfile
 ```
 
 Do **not** use `init --force-config` unless you intentionally want the template to replace your config (a `.bak` is written).

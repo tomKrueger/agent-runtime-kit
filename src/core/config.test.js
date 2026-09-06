@@ -71,3 +71,23 @@ test("loadProjectConfig reads legacy .cursor path with warning path", () => {
 test("normalizeConfig still requires ports on merged object", () => {
   assert.throws(() => normalizeConfig({ envDefaults: {} }), /supabase/);
 });
+
+test("normalizeConfig applies nodeVersion override and leaves unset optional", () => {
+  const withOverride = normalizeConfig({
+    supabase: { apiPort: 1, dbPort: 2 },
+    nodeVersion: "24.11.0",
+  });
+  assert.equal(withOverride.nodeVersion, "24.11.0");
+  assert.equal(withOverride.pnpmVersion, undefined);
+
+  const bare = normalizeConfig({ supabase: { apiPort: 1, dbPort: 2 } });
+  assert.equal(bare.nodeVersion, undefined);
+  assert.equal(bare.pnpmVersion, undefined);
+});
+
+test("normalizeConfig rejects unsafe nodeVersion", () => {
+  assert.throws(
+    () => normalizeConfig({ supabase: { apiPort: 1, dbPort: 2 }, nodeVersion: "../evil" }),
+    /nodeVersion/,
+  );
+});

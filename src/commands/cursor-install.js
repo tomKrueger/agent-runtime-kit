@@ -16,7 +16,7 @@ import { runBashScript, runCommand, SCRIPTS_DIR } from "../core/run.js";
  */
 export async function cmdCursorInstall(_args = [], opts = {}) {
   const projectRoot = opts.projectRoot || process.cwd();
-  const config = loadProjectConfig(projectRoot);
+  const config = loadProjectConfig(projectRoot, { vendor: "cursor" });
   const installOpts = config.cursorInstall || {};
   const ensureRuntime = installOpts.ensureRuntime !== false;
   const warmImages = installOpts.warmSupabaseImages !== false;

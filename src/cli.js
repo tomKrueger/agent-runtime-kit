@@ -5,6 +5,7 @@ import { cmdCursorInstall } from "./commands/cursor-install.js";
 import { cmdCursorStart, cmdPrepare } from "./commands/cursor-start.js";
 import { cmdHelp } from "./commands/help.js";
 import { cmdInit } from "./commands/init.js";
+import { cmdSync } from "./commands/sync.js";
 import { cmdVersion } from "./commands/version.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -35,6 +36,9 @@ export async function runCli(args) {
     case "init":
       await cmdInit(rest);
       return;
+    case "sync":
+      await cmdSync(rest);
+      return;
     case "cursor-install":
       await cmdCursorInstall(rest);
       return;
@@ -44,12 +48,11 @@ export async function runCli(args) {
     case "prepare":
       await cmdPrepare(rest);
       return;
-    case "sync":
     case "codex-setup":
     case "claude-bootstrap":
     case "selfhosted-prepare":
       console.error(
-        `[agent-runtime] "${command}" is not implemented yet (adapters beyond Cursor). Use prepare / cursor-start for workspace bootstrap.`,
+        `[agent-runtime] "${command}" not fully implemented — use \`prepare --vendor=claude\` (or cursor) for now.`,
       );
       process.exitCode = 2;
       return;

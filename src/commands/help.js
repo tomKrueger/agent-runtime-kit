@@ -7,21 +7,25 @@ Usage:
 Commands:
   help                 Show this help
   version              Print package version
-  init                 Scaffold .cursor/agent-runtime.config.json + environment.json
-  cursor-install       Cursor Cloud Build entry (ensure runtime + warm Supabase images)
-  cursor-start         Cursor Cloud boot (write .env.local, local/hosted Supabase, migrate)
-  prepare              Same as cursor-start (generic alias)
+  init                 Create root agent-runtime.config.json if missing; refresh adapters
+  sync                 Regenerate .cursor/environment.json (etc.) FROM config — never wipes config
+  cursor-install       Cursor Cloud Build entry
+  cursor-start         Cursor Cloud boot
+  prepare              Same bootstrap; pass --vendor=claude|cursor|default
 
-Coming later:
-  sync, codex-setup, claude-bootstrap, selfhosted-prepare
+Init flags:
+  --refresh / --force  Refresh adapters from config (does NOT overwrite config)
+  --force-config       DANGEROUS: replace agent-runtime.config.json from template
+
+Config layering (repo root):
+  agent-runtime.config.json                 shared defaults (required)
+  agent-runtime.config.cursor.json          optional Cursor overrides
+  agent-runtime.config.claude.json          optional Claude overrides
+
+After editing config:
+  pnpm exec agent-runtime sync
 
 Install:
-  pnpm add github:tomKrueger/agent-runtime-kit#v0.1.0
-
-Consumer contract:
-  1. Add dependency + commit .cursor/agent-runtime.config.json (ports, migrateCmd, envKeys)
-  2. Point .cursor/environment.json install/start at cursor-install / cursor-start
-  3. Rebuild the Cursor Cloud environment
-  4. Only then remove legacy .cursor/scripts/cursor-agent/*.sh
+  pnpm add github:tomKrueger/agent-runtime-kit#v0.1.1
 `);
 }

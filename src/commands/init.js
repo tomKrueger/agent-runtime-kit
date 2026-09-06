@@ -1,83 +1,91 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  BASE_CONFIG_FILENAME,
+  LEGACY_CONFIG_RELATIVE_PATH,
+} from "../core/config.js";
+import { cmdSync } from "./sync.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = join(__dirname, "..", "..");
 const TEMPLATES = join(PACKAGE_ROOT, "templates");
 
 /**
+ * Scaffold base config (once) and refresh vendor adapters from it.
+ *
+ * Flags:
+ *   --force / --refresh   Regenerate adapters (environment.json) from config. Never wipes config.
+ *   --force-config        DANGEROUS: overwrite base agent-runtime.config.json from the template.
+ *
  * @param {string[]} args
  */
 export async function cmdInit(args) {
   const cwd = resolve(process.cwd());
-  const force = args.includes("--force");
+  const refreshAdapters = args.includes("--force") || args.includes("--refresh");
+  const forceConfig = args.includes("--force-config");
 
-  const configPath = join(cwd, ".cursor", "agent-runtime.config.json");
-  const envJsonPath = join(cwd, ".cursor", "environment.json");
+  const configPath = join(cwd, BASE_CONFIG_FILENAME);
+  const legacyPath = join(cwd, LEGACY_CONFIG_RELATIVE_PATH);
   const exampleConfigSrc = join(TEMPLATES, "project.config.example.json");
-  const envTplSrc = join(TEMPLATES, "cursor", "environment.json.example");
-
-  mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  const cursorOverlayExample = join(TEMPLATES, "agent-runtime.config.cursor.example.json");
+  const claudeOverlayExample = join(TEMPLATES, "agent-runtime.config.claude.example.json");
 
   const derivedName = deriveEnvironmentName(cwd);
 
-  if (existsSync(configPath) && !force) {
-    console.log(`[agent-runtime init] skip existing ${rel(cwd, configPath)} (use --force to overwrite)`);
-  } else {
+  if (existsSync(legacyPath) && !existsSync(configPath)) {
+    console.log(`[agent-runtime init] found legacy ${LEGACY_CONFIG_RELATIVE_PATH} — run sync to move it to root`);
+  }
+
+  if (existsSync(configPath) && !forceConfig) {
+    console.log(`[agent-runtime init] keep existing ${BASE_CONFIG_FILENAME} (use --force-config to replace from template)`);
+  } else if (forceConfig && existsSync(configPath)) {
+    const backup = `${configPath}.bak`;
+    writeFileSync(backup, readFileSync(configPath));
     const config = JSON.parse(readFileSync(exampleConfigSrc, "utf8"));
     config.environmentName = derivedName;
     writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
-    console.log(`[agent-runtime init] wrote ${rel(cwd, configPath)} (environmentName=${derivedName})`);
+    console.warn(`[agent-runtime init] OVERWROTE ${BASE_CONFIG_FILENAME} (backup: ${basename(backup)})`);
+  } else if (!existsSync(configPath)) {
+    const config = JSON.parse(readFileSync(exampleConfigSrc, "utf8"));
+    config.environmentName = derivedName;
+    writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
+    console.log(`[agent-runtime init] wrote ${BASE_CONFIG_FILENAME} (environmentName=${derivedName})`);
   }
 
-  /** @type {{ environmentName?: string, supabase?: { apiPort?: number, dbPort?: number, studioPort?: number }, packageManager?: string, installCmd?: string, devCmd?: string }} */
-  let projectConfig = {};
-  try {
-    projectConfig = JSON.parse(readFileSync(configPath, "utf8"));
-  } catch {
-    projectConfig = {};
-  }
+  // Optional overlay examples (never overwrite real overlays).
+  writeExampleIfMissing(join(cwd, "agent-runtime.config.cursor.example.json"), cursorOverlayExample);
+  writeExampleIfMissing(join(cwd, "agent-runtime.config.claude.example.json"), claudeOverlayExample);
 
-  const environmentName = projectConfig.environmentName || derivedName;
-  const apiPort = projectConfig.supabase?.apiPort ?? 54321;
-  const dbPort = projectConfig.supabase?.dbPort ?? 54322;
-  const studioPort = projectConfig.supabase?.studioPort ?? 54323;
-  const packageManager = projectConfig.packageManager || "pnpm";
-  const installCmd =
-    projectConfig.installCmd ||
-    (packageManager === "npm" ? "npm ci" : "pnpm install --frozen-lockfile");
-  const devCmd = projectConfig.devCmd || `${packageManager} run dev`;
+  mkdirSync(join(cwd, ".cursor"), { recursive: true });
 
-  if (existsSync(envJsonPath) && !force) {
-    console.log(`[agent-runtime init] skip existing ${rel(cwd, envJsonPath)} (use --force to overwrite)`);
+  const envJsonPath = join(cwd, ".cursor", "environment.json");
+  if (refreshAdapters || !existsSync(envJsonPath)) {
+    await cmdSync(["--vendor=cursor"], { projectRoot: cwd });
   } else {
-    /** @type {Record<string, unknown>} */
-    const envJson = JSON.parse(readFileSync(envTplSrc, "utf8"));
-    envJson.name = environmentName;
-    envJson.install = `${installCmd} && ${packageManager === "npm" ? "npx" : "pnpm exec"} agent-runtime cursor-install`;
-    envJson.start = `${packageManager === "npm" ? "npx" : "pnpm exec"} agent-runtime cursor-start`;
-    if (Array.isArray(envJson.terminals) && envJson.terminals[0] && typeof envJson.terminals[0] === "object") {
-      envJson.terminals[0].command = devCmd;
-    }
-    envJson.ports = [
-      { name: "web", port: 3000 },
-      { name: "supabase-api", port: apiPort },
-      { name: "supabase-db", port: dbPort },
-      { name: "supabase-studio", port: studioPort },
-    ];
-    writeFileSync(envJsonPath, `${JSON.stringify(envJson, null, 2)}\n`, "utf8");
-    console.log(`[agent-runtime init] wrote ${rel(cwd, envJsonPath)} (name=${environmentName})`);
+    console.log(
+      `[agent-runtime init] keep existing .cursor/environment.json (run \`agent-runtime sync\` or \`init --refresh\` after config changes)`,
+    );
   }
 
-  console.log(
-    `[agent-runtime init] done — set environmentName / ports in .cursor/agent-runtime.config.json (Cursor "name" is a display label, not the npm package name)`,
-  );
+  console.log(`[agent-runtime init] done`);
+  console.log(`  Shared config:  ./${BASE_CONFIG_FILENAME}`);
+  console.log(`  Optional:       ./agent-runtime.config.cursor.json`);
+  console.log(`  Optional:       ./agent-runtime.config.claude.json`);
+  console.log(`  After edits:    pnpm exec agent-runtime sync`);
 }
 
 /**
- * Prefer an explicit product-ish label over the raw npm package name.
- * package.json names like hresalehub_web_nextjs become hresalehub-dev.
+ * @param {string} dest
+ * @param {string} src
+ */
+function writeExampleIfMissing(dest, src) {
+  if (existsSync(dest) || !existsSync(src)) return;
+  writeFileSync(dest, readFileSync(src));
+  console.log(`[agent-runtime init] wrote ${basename(dest)} (example only — copy to .json to enable)`);
+}
+
+/**
  * @param {string} cwd
  */
 export function deriveEnvironmentName(cwd) {
@@ -102,12 +110,4 @@ export function deriveEnvironmentName(cwd) {
     .replace(/_web_nextjs$/i, "")
     .replace(/_/g, "-");
   return `${dir}-dev`;
-}
-
-/**
- * @param {string} cwd
- * @param {string} absolute
- */
-function rel(cwd, absolute) {
-  return absolute.startsWith(cwd) ? absolute.slice(cwd.length + 1) : absolute;
 }

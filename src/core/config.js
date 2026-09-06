@@ -1,13 +1,20 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-export const CONFIG_RELATIVE_PATH = ".cursor/agent-runtime.config.json";
+/** Repo-root shared config (preferred). */
+export const BASE_CONFIG_FILENAME = "agent-runtime.config.json";
+/** Legacy path from early kit versions. */
+export const LEGACY_CONFIG_RELATIVE_PATH = ".cursor/agent-runtime.config.json";
 
 /** Demo JWTs from local `supabase start` (not secrets). */
 export const LOCAL_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
 export const LOCAL_SERVICE_ROLE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
+
+/**
+ * @typedef {'cursor' | 'claude' | 'codex' | 'default'} AgentRuntimeVendor
+ */
 
 /**
  * @typedef {object} SupabasePorts
@@ -31,24 +38,110 @@ export const LOCAL_SERVICE_ROLE_KEY =
  */
 
 /**
- * @param {string} projectRoot
- * @returns {AgentRuntimeConfig}
+ * @param {AgentRuntimeVendor | string} vendor
  */
-export function loadProjectConfig(projectRoot) {
-  const path = join(projectRoot, CONFIG_RELATIVE_PATH);
-  if (!existsSync(path)) {
-    throw new Error(
-      `Missing ${CONFIG_RELATIVE_PATH}. Run \`agent-runtime init\` or copy templates/project.config.example.json.`,
-    );
+export function vendorConfigFilename(vendor) {
+  if (!vendor || vendor === "default") return null;
+  return `agent-runtime.config.${vendor}.json`;
+}
+
+/**
+ * Resolve base config path (root preferred, legacy .cursor/ supported).
+ * @param {string} projectRoot
+ * @returns {{ path: string, legacy: boolean }}
+ */
+export function resolveBaseConfigPath(projectRoot) {
+  const rootPath = join(projectRoot, BASE_CONFIG_FILENAME);
+  if (existsSync(rootPath)) return { path: rootPath, legacy: false };
+  const legacyPath = join(projectRoot, LEGACY_CONFIG_RELATIVE_PATH);
+  if (existsSync(legacyPath)) return { path: legacyPath, legacy: true };
+  return { path: rootPath, legacy: false };
+}
+
+/**
+ * Deep-merge plain objects. Arrays and scalars from `overlay` replace.
+ * @param {Record<string, unknown>} base
+ * @param {Record<string, unknown>} overlay
+ * @returns {Record<string, unknown>}
+ */
+export function deepMerge(base, overlay) {
+  /** @type {Record<string, unknown>} */
+  const out = { ...base };
+  for (const [key, value] of Object.entries(overlay)) {
+    if (value === undefined) continue;
+    const existing = out[key];
+    if (
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      existing &&
+      typeof existing === "object" &&
+      !Array.isArray(existing)
+    ) {
+      out[key] = deepMerge(
+        /** @type {Record<string, unknown>} */ (existing),
+        /** @type {Record<string, unknown>} */ (value),
+      );
+    } else {
+      out[key] = value;
+    }
   }
-  /** @type {unknown} */
+  return out;
+}
+
+/**
+ * @param {string} path
+ * @returns {Record<string, unknown>}
+ */
+function readJsonObject(path) {
   let raw;
   try {
     raw = JSON.parse(readFileSync(path, "utf8"));
   } catch (err) {
-    throw new Error(`Invalid JSON in ${CONFIG_RELATIVE_PATH}: ${err instanceof Error ? err.message : err}`);
+    throw new Error(`Invalid JSON in ${path}: ${err instanceof Error ? err.message : err}`);
   }
-  return normalizeConfig(raw, path);
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${path} must be a JSON object`);
+  }
+  return /** @type {Record<string, unknown>} */ (raw);
+}
+
+/**
+ * Load base + optional vendor overlay, then normalize.
+ * @param {string} projectRoot
+ * @param {{ vendor?: AgentRuntimeVendor | string }} [opts]
+ * @returns {AgentRuntimeConfig & { _meta?: { basePath: string, overlayPath?: string, legacy: boolean, vendor: string } }}
+ */
+export function loadProjectConfig(projectRoot, opts = {}) {
+  const vendor = opts.vendor || process.env.AGENT_RUNTIME_VENDOR || "default";
+  const { path: basePath, legacy } = resolveBaseConfigPath(projectRoot);
+  if (!existsSync(basePath)) {
+    throw new Error(
+      `Missing ${BASE_CONFIG_FILENAME} at project root. Run \`agent-runtime init\` (or migrate from ${LEGACY_CONFIG_RELATIVE_PATH}).`,
+    );
+  }
+  if (legacy) {
+    console.warn(
+      `[agent-runtime] WARN: using legacy ${LEGACY_CONFIG_RELATIVE_PATH}; move it to ./${BASE_CONFIG_FILENAME} (repo root)`,
+    );
+  }
+
+  let merged = readJsonObject(basePath);
+  /** @type {string | undefined} */
+  let overlayPath;
+  const overlayName = vendorConfigFilename(vendor);
+  if (overlayName) {
+    const candidate = join(projectRoot, overlayName);
+    if (existsSync(candidate)) {
+      overlayPath = candidate;
+      merged = deepMerge(merged, readJsonObject(candidate));
+    }
+  }
+
+  const config = normalizeConfig(merged, overlayPath || basePath);
+  return Object.assign(config, {
+    _meta: { basePath, overlayPath, legacy, vendor: String(vendor) },
+  });
 }
 
 /**
@@ -56,14 +149,14 @@ export function loadProjectConfig(projectRoot) {
  * @param {string} pathForErrors
  * @returns {AgentRuntimeConfig}
  */
-export function normalizeConfig(raw, pathForErrors = CONFIG_RELATIVE_PATH) {
+export function normalizeConfig(raw, pathForErrors = BASE_CONFIG_FILENAME) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error(`${pathForErrors} must be a JSON object`);
   }
   const obj = /** @type {Record<string, unknown>} */ (raw);
   const supabaseRaw = obj.supabase;
   if (!supabaseRaw || typeof supabaseRaw !== "object" || Array.isArray(supabaseRaw)) {
-    throw new Error(`${pathForErrors} must include supabase.apiPort and supabase.dbPort`);
+    throw new Error(`${pathForErrors} must include supabase.apiPort and supabase.dbPort (usually in base config)`);
   }
   const supabaseObj = /** @type {Record<string, unknown>} */ (supabaseRaw);
   const apiPort = Number(supabaseObj.apiPort);
@@ -120,8 +213,6 @@ export function normalizeConfig(raw, pathForErrors = CONFIG_RELATIVE_PATH) {
 }
 
 /**
- * Built-in local defaults derived from configured Supabase ports.
- * Project envDefaults override these; process env overrides both.
  * @param {AgentRuntimeConfig} config
  * @returns {Record<string, string>}
  */
@@ -137,7 +228,6 @@ export function builtInLocalDefaults(config) {
 }
 
 /**
- * Default key order when envKeys is omitted.
  * @param {AgentRuntimeConfig} config
  * @returns {string[]}
  */
@@ -153,3 +243,6 @@ export function defaultEnvKeys(config) {
   }
   return ordered;
 }
+
+/** @deprecated use BASE_CONFIG_FILENAME */
+export const CONFIG_RELATIVE_PATH = BASE_CONFIG_FILENAME;

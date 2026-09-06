@@ -1,0 +1,10 @@
+{
+  "cursorInstall": {
+    "runInstallCmd": false,
+    "ensureRuntime": true,
+    "warmSupabaseImages": true
+  },
+  "cursorStart": {
+    "resilient": true
+  }
+}

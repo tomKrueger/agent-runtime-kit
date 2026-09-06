@@ -1,0 +1,5 @@
+{
+  "envDefaults": {
+    "EMAIL_PROVIDER": "console"
+  }
+}

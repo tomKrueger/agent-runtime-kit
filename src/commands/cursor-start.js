@@ -16,7 +16,7 @@ import { isLocalSupabaseUrl } from "../core/supabase.js";
  */
 export async function cmdCursorStart(_args = [], opts = {}) {
   const projectRoot = opts.projectRoot || process.cwd();
-  const config = loadProjectConfig(projectRoot);
+  const config = loadProjectConfig(projectRoot, { vendor: opts.vendor || "cursor" });
   const resilient = opts.resilient ?? config.cursorStart?.resilient !== false;
 
   const finish = (code) => {
@@ -96,6 +96,21 @@ export async function cmdCursorStart(_args = [], opts = {}) {
 }
 
 /** Alias for non-Cursor adapters / manual boots. */
-export async function cmdPrepare(args, opts) {
-  return cmdCursorStart(args, opts);
+export async function cmdPrepare(args = [], opts = {}) {
+  const vendor = parseVendorArg(args) || opts.vendor || process.env.AGENT_RUNTIME_VENDOR || "default";
+  return cmdCursorStart(
+    args.filter((a) => a !== "--vendor" && !a.startsWith("--vendor=")),
+    { ...opts, vendor },
+  );
+}
+
+/**
+ * @param {string[]} args
+ */
+function parseVendorArg(args) {
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--vendor" && args[i + 1]) return args[i + 1];
+    if (args[i].startsWith("--vendor=")) return args[i].slice("--vendor=".length);
+  }
+  return undefined;
 }

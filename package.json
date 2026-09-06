@@ -1,0 +1,45 @@
+{
+  "name": "@gritgoattech/agent-runtime-kit",
+  "version": "0.0.1",
+  "description": "Shared workspace runtime for Cursor / Codex / Claude cloud agents and self-hosted runners (local vs hosted Supabase).",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": false,
+  "bin": {
+    "agent-runtime": "./bin/agent-runtime.js"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "scripts",
+    "templates",
+    "README.md",
+    "package.json"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "agent-runtime": "node ./bin/agent-runtime.js",
+    "test": "node --test src/**/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GritGoatTech/agent-runtime-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GritGoatTech/agent-runtime-kit/issues"
+  },
+  "homepage": "https://github.com/GritGoatTech/agent-runtime-kit#readme",
+  "keywords": [
+    "cursor",
+    "cloud-agents",
+    "supabase",
+    "codex",
+    "claude",
+    "self-hosted"
+  ]
+}

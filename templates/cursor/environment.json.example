@@ -1,0 +1,24 @@
+{
+  "$schema": "https://www.cursor.com/schemas/environment.schema.json",
+  "name": "app-dev",
+  "user": "ubuntu",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "install": "pnpm install --frozen-lockfile && pnpm exec agent-runtime cursor-install",
+  "start": "pnpm exec agent-runtime cursor-start",
+  "terminals": [
+    {
+      "name": "dev",
+      "command": "pnpm dev",
+      "description": "Next.js dev server on http://localhost:3000"
+    }
+  ],
+  "ports": [
+    { "name": "web", "port": 3000 },
+    { "name": "supabase-api", "port": 54321 },
+    { "name": "supabase-db", "port": 54322 },
+    { "name": "supabase-studio", "port": 54323 }
+  ]
+}

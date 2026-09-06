@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { cmdCursorInstall } from "./commands/cursor-install.js";
+import { cmdCursorStart, cmdPrepare } from "./commands/cursor-start.js";
 import { cmdHelp } from "./commands/help.js";
 import { cmdInit } from "./commands/init.js";
 import { cmdVersion } from "./commands/version.js";
@@ -33,15 +35,21 @@ export async function runCli(args) {
     case "init":
       await cmdInit(rest);
       return;
-    case "sync":
-    case "prepare":
     case "cursor-install":
+      await cmdCursorInstall(rest);
+      return;
     case "cursor-start":
+      await cmdCursorStart(rest);
+      return;
+    case "prepare":
+      await cmdPrepare(rest);
+      return;
+    case "sync":
     case "codex-setup":
     case "claude-bootstrap":
     case "selfhosted-prepare":
       console.error(
-        `[agent-runtime] "${command}" is planned for a later phase (core/adapters). This is phase 0 (${getPackageVersion()}).`,
+        `[agent-runtime] "${command}" is not implemented yet (adapters beyond Cursor). Use prepare / cursor-start for workspace bootstrap.`,
       );
       process.exitCode = 2;
       return;

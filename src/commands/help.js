@@ -7,18 +7,21 @@ Usage:
 Commands:
   help                 Show this help
   version              Print package version
-  init                 Scaffold project config + Cursor templates (phase 0)
+  init                 Scaffold .cursor/agent-runtime.config.json + environment.json
+  cursor-install       Cursor Cloud Build entry (ensure runtime + warm Supabase images)
+  cursor-start         Cursor Cloud boot (write .env.local, local/hosted Supabase, migrate)
+  prepare              Same as cursor-start (generic alias)
 
-Coming in later phases:
-  sync                 Refresh templates from this package version
-  prepare              setup-env + local/hosted Supabase + migrate
-  cursor-install       Cursor Cloud Build (install) entrypoint
-  cursor-start         Cursor Cloud boot (start) entrypoint
-  codex-setup          OpenAI Codex setup-script entrypoint
-  claude-bootstrap     Claude cloud/self-hosted bootstrap
-  selfhosted-prepare   Generic self-hosted runner prepare
+Coming later:
+  sync, codex-setup, claude-bootstrap, selfhosted-prepare
 
-Install (GitHub tag, no registry server):
-  pnpm add github:tomKrueger/agent-runtime-kit#v0.0.2
+Install:
+  pnpm add github:tomKrueger/agent-runtime-kit#v0.1.0
+
+Consumer contract:
+  1. Add dependency + commit .cursor/agent-runtime.config.json (ports, migrateCmd, envKeys)
+  2. Point .cursor/environment.json install/start at cursor-install / cursor-start
+  3. Rebuild the Cursor Cloud environment
+  4. Only then remove legacy .cursor/scripts/cursor-agent/*.sh
 `);
 }

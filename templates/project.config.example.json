@@ -18,5 +18,13 @@
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY"
-  ]
+  ],
+  "cursorInstall": {
+    "runInstallCmd": false,
+    "ensureRuntime": true,
+    "warmSupabaseImages": true
+  },
+  "cursorStart": {
+    "resilient": true
+  }
 }

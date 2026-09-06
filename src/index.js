@@ -1,5 +1,13 @@
 /**
- * Public library entry (phase 0 stub).
- * Later phases export config loading and prepare helpers.
+ * Public library entry.
  */
 export { getPackageVersion } from "./cli.js";
+export {
+  builtInLocalDefaults,
+  CONFIG_RELATIVE_PATH,
+  defaultEnvKeys,
+  loadProjectConfig,
+  normalizeConfig,
+} from "./core/config.js";
+export { applyResolvedEnv, resolveEnvMap, resolveEnvValue, writeEnvLocal } from "./core/env.js";
+export { isLocalSupabaseUrl } from "./core/supabase.js";

@@ -101,12 +101,13 @@ Vendor selection:
 
 | Command / flag | Allowed to change |
 | --- | --- |
-| `init` | Create base config **only if missing**; create adapter if missing |
+| `init` | Create base config **only if missing**; create adapter if missing. **Does not** write vendor overlays or example overlay files |
+| `overlay <vendor>` | Create `agent-runtime.config.<vendor>.json` from template **only if missing** (`--force` replaces with `.bak`) |
 | `init --refresh` / `init --force` | Regenerate adapters from config — **never overwrite base config** |
 | `init --force-config` | Replace base config from template (write `.bak`) — rare, explicit |
 | `sync` | Regenerate adapters only — **never touch base/overlay config content** |
 
-Rationale: config holds product-specific ports, secrets defaults, migrate commands. Wiping it on “force” destroyed Hresale’s `603xx` settings in early trials.
+Rationale: config holds product-specific ports, secrets defaults, migrate commands. Wiping it on “force” destroyed Hresale’s `603xx` settings in early trials. Vendor overlays stay opt-in so `init` does not litter example Cursor/Claude files into every consumer.
 
 ### 3.4 Environment resolution
 

@@ -23,9 +23,16 @@ pnpm exec agent-runtime sync
 
 ```text
 agent-runtime.config.json                 # required — shared defaults
-agent-runtime.config.cursor.json          # optional — Cursor overrides
-agent-runtime.config.claude.json          # optional — Claude overrides
+agent-runtime.config.cursor.json          # optional — Cursor overrides (add via overlay)
+agent-runtime.config.claude.json          # optional — Claude overrides (add via overlay)
 .cursor/environment.json                  # GENERATED for Cursor — refresh via sync
+```
+
+`init` only creates the base config (and Cursor adapter). Vendor overlays are opt-in:
+
+```bash
+pnpm exec agent-runtime overlay cursor
+# or: pnpm exec agent-runtime overlay claude
 ```
 
 Merge order: **base → vendor overlay**. After editing config:
@@ -44,6 +51,7 @@ pnpm exec agent-runtime sync
 
 ## Commands
 
+- `overlay cursor\|claude` — manually add a vendor override file (not created by `init`)
 - `cursor-install` — Cloud Build: ensure Docker/CLI + warm Supabase images  
 - `cursor-start` / `prepare` — boot: `.env.local`, local/hosted Supabase, migrate  
 - `sync` — regenerate vendor adapters from config  

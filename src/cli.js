@@ -5,6 +5,7 @@ import { cmdCursorInstall } from "./commands/cursor-install.js";
 import { cmdCursorStart, cmdPrepare } from "./commands/cursor-start.js";
 import { cmdHelp } from "./commands/help.js";
 import { cmdInit } from "./commands/init.js";
+import { cmdOverlay } from "./commands/overlay.js";
 import { cmdSync } from "./commands/sync.js";
 import { cmdVersion } from "./commands/version.js";
 
@@ -35,6 +36,9 @@ export async function runCli(args) {
       return;
     case "init":
       await cmdInit(rest);
+      return;
+    case "overlay":
+      await cmdOverlay(rest);
       return;
     case "sync":
       await cmdSync(rest);

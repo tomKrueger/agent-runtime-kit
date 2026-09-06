@@ -18,6 +18,8 @@ const TEMPLATES = join(PACKAGE_ROOT, "templates");
  *   --force / --refresh   Regenerate adapters (environment.json) from config. Never wipes config.
  *   --force-config        DANGEROUS: overwrite base agent-runtime.config.json from the template.
  *
+ * Does not write vendor overlays — use `agent-runtime overlay <cursor|claude>`.
+ *
  * @param {string[]} args
  */
 export async function cmdInit(args) {
@@ -28,8 +30,6 @@ export async function cmdInit(args) {
   const configPath = join(cwd, BASE_CONFIG_FILENAME);
   const legacyPath = join(cwd, LEGACY_CONFIG_RELATIVE_PATH);
   const exampleConfigSrc = join(TEMPLATES, "project.config.example.json");
-  const cursorOverlayExample = join(TEMPLATES, "agent-runtime.config.cursor.example.json");
-  const claudeOverlayExample = join(TEMPLATES, "agent-runtime.config.claude.example.json");
 
   const derivedName = deriveEnvironmentName(cwd);
 
@@ -53,10 +53,6 @@ export async function cmdInit(args) {
     console.log(`[agent-runtime init] wrote ${BASE_CONFIG_FILENAME} (environmentName=${derivedName})`);
   }
 
-  // Optional overlay examples (never overwrite real overlays).
-  writeExampleIfMissing(join(cwd, "agent-runtime.config.cursor.example.json"), cursorOverlayExample);
-  writeExampleIfMissing(join(cwd, "agent-runtime.config.claude.example.json"), claudeOverlayExample);
-
   mkdirSync(join(cwd, ".cursor"), { recursive: true });
 
   const envJsonPath = join(cwd, ".cursor", "environment.json");
@@ -70,19 +66,8 @@ export async function cmdInit(args) {
 
   console.log(`[agent-runtime init] done`);
   console.log(`  Shared config:  ./${BASE_CONFIG_FILENAME}`);
-  console.log(`  Optional:       ./agent-runtime.config.cursor.json`);
-  console.log(`  Optional:       ./agent-runtime.config.claude.json`);
+  console.log(`  Vendor overlay: agent-runtime overlay cursor|claude`);
   console.log(`  After edits:    pnpm exec agent-runtime sync`);
-}
-
-/**
- * @param {string} dest
- * @param {string} src
- */
-function writeExampleIfMissing(dest, src) {
-  if (existsSync(dest) || !existsSync(src)) return;
-  writeFileSync(dest, readFileSync(src));
-  console.log(`[agent-runtime init] wrote ${basename(dest)} (example only — copy to .json to enable)`);
 }
 
 /**

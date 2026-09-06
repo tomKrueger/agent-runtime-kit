@@ -39,9 +39,11 @@ Cursor Boot
             ├─ load config ⊕ cursor overlay
             ├─ resolve env → write .env.local
             ├─ if local URL → start-local-supabase.sh → migrateCmd
-            └─ if hosted URL → skip stack (warn if DATABASE_URL still local)
+            ├─ if hosted URL → skip stack (warn if DATABASE_URL still local)
+            └─ write .agent-runtime/start-support.{md,json}
 ```
 
+Install also writes `.agent-runtime/install-support.{md,json}` (kit version, tool versions, timestamps).
 ## Config merge
 
 ```text

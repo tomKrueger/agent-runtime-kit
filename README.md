@@ -62,8 +62,8 @@ pnpm exec agent-runtime sync
 ## Commands
 
 - `overlay cursor\|claude` — manually add a vendor override file (not created by `init`)
-- `cursor-install` — Cloud Build: ensure Docker/CLI + warm Supabase images  
-- `cursor-start` / `prepare` — boot: `.env.local`, local/hosted Supabase, migrate  
+- `cursor-install` — Cloud Build: ensure Docker/CLI + warm Supabase images; writes `.agent-runtime/install-support.*`  
+- `cursor-start` / `prepare` — boot: `.env.local`, local/hosted Supabase, migrate; writes `.agent-runtime/start-support.*`  
 - `sync` — regenerate `.cursor/environment.json` + shared `.cursor/Dockerfile`  
 
 ## Env resolution

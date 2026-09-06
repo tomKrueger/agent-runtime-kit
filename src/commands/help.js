@@ -19,6 +19,6 @@ Coming in later phases:
   selfhosted-prepare   Generic self-hosted runner prepare
 
 Install (GitHub tag, no registry server):
-  pnpm add github:GritGoatTech/agent-runtime-kit#v0.0.1
+  pnpm add github:tomKrueger/agent-runtime-kit#v0.0.1
 `);
 }

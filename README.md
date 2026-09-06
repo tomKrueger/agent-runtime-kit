@@ -7,12 +7,12 @@ Shared **workspace runtime** for Cursor Cloud Agents, OpenAI Codex, Claude Code,
 ## Install (GitHub only — no npm registry / no extra server)
 
 ```bash
-pnpm add github:GritGoatTech/agent-runtime-kit#v0.0.1
+pnpm add github:tomKrueger/agent-runtime-kit#v0.0.1
 # or
-npm install github:GritGoatTech/agent-runtime-kit#v0.0.1
+npm install github:tomKrueger/agent-runtime-kit#v0.0.1
 ```
 
-Private repo: Cloud Agents / CI need a GitHub token with `contents:read` (e.g. Cursor Secret) so the package can be fetched.
+Hosted at [tomKrueger/agent-runtime-kit](https://github.com/tomKrueger/agent-runtime-kit) (transfer to `GritGoatTech` later if desired). Private repo: Cloud Agents / CI need a GitHub token with `contents:read` (e.g. Cursor Secret) so the package can be fetched.
 
 ## CLI
 
@@ -45,4 +45,4 @@ After `init`, edit `.cursor/agent-runtime.config.json`:
 
 ## License
 
-UNLICENSED — private GritGoatTech package.
+UNLICENSED — private package (`@gritgoattech/agent-runtime-kit`).

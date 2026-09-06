@@ -28,12 +28,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GritGoatTech/agent-runtime-kit.git"
+    "url": "git+https://github.com/tomKrueger/agent-runtime-kit.git"
   },
   "bugs": {
-    "url": "https://github.com/GritGoatTech/agent-runtime-kit/issues"
+    "url": "https://github.com/tomKrueger/agent-runtime-kit/issues"
   },
-  "homepage": "https://github.com/GritGoatTech/agent-runtime-kit#readme",
+  "homepage": "https://github.com/tomKrueger/agent-runtime-kit#readme",
   "keywords": [
     "cursor",
     "cloud-agents",
